@@ -1,12 +1,3 @@
-/* ************************************************************
-* SOR 22-23: simple example of image processing
-*            Very crude and basic example, only for illustartion 
-* 			 Actual implementations should be far better than this 
-* 
-* Paulo Pedreiras, Nov 2022
-* 
-************************************************************** */
-
 /* The usual includes */
 #include <stdio.h>
 #include <stdlib.h>
@@ -23,6 +14,7 @@
 #define NOB_ROW 3	/* Row to look for near obstacles */
 #define NOB_COL 5	/* Col to look for near obstacles */
 #define NOB_WIDTH 5	/* WIDTH of the sensor area */
+#define PI 3.141593 /* PI with  6 decimal cases */
 
 /* One example image. In raw/gray format an image is an array of 
  * bytes, one per pixel, with values that represent intensity and range
@@ -56,18 +48,18 @@ uint8_t img1[IMGWIDTH][IMGWIDTH]=
 
 
 /* Function that detects he position and agle of the guideline */
-/* Very crude implemenation. Just for illustration purposes */
 int guideLineSearch(uint8_t imageBuf[IMGWIDTH][IMGWIDTH], int16_t *pos, float *angle) {
 	int i, gf_pos;
+	float divergence, pos_percent;
 		
 	/* Inits */
-	*pos=-1;
+	pos_percent=-1;
 	gf_pos=-1;
 		
 	/* Search for guideline pos - Near*/
 	for(i=0; i < IMGWIDTH; i++) {
 		if(imageBuf[GN_ROW][i] == GUIDELINE_COLOR) {
-			*pos = i;
+			pos_percent = i;
 			break;
 		}			
 	}
@@ -78,24 +70,20 @@ int guideLineSearch(uint8_t imageBuf[IMGWIDTH][IMGWIDTH], int16_t *pos, float *a
 			gf_pos = i;
 			break;
 		}			
-	}		
-	
-	if(*pos == -1 || gf_pos == -1) {
-		printf("Failed to find guideline pos=%d, gf_pos=%d", *pos, gf_pos);
+	}
+
+	if(pos_percent == -1 || gf_pos == -1) {
+		printf("Failed to find guideline pos=%d, gf_pos=%d", (int)pos_percent, gf_pos);
 		return -1;
 	}
-		
-	/* Approach very grossly the angle (NOT a valid solution - just for testing ) */
-	if(*pos==gf_pos){
-		*angle=0;
-	} else {		
-		if(*pos < gf_pos) {
-			*angle = -3.14/4; /* -Pi/4*/	
-		} else {
-			*angle = -3.14/4; /* Pi/4*/	
-		}
-	}
+
+	// angle calculation, assumes img is square
+	divergence = (pos_percent-gf_pos)/(IMGWIDTH-1);
+	*angle = divergence * (PI/4); 
 	
+	// position percentage
+	*pos = (pos_percent/(IMGWIDTH-1)) * 100;
+
 	return 0;	
 }
 
@@ -138,7 +126,7 @@ int main() {
 	
 	printf("Test for image processing algorithms \n\r");
 	
-	printf("Detecting position and guideline angle ...");
+	printf("Detecting position and guideline angle ...\n\r");
 	res = guideLineSearch(img1, &pos, &angle);
 	printf("Robot position=%d, guideline angle = %f\n\r",pos,angle);
 	
