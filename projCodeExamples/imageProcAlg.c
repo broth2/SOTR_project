@@ -15,6 +15,9 @@
 #define NOB_COL 5	/* Col to look for near obstacles */
 #define NOB_WIDTH 5	/* WIDTH of the sensor area */
 #define PI 3.141593 /* PI with  6 decimal cases */
+#define CSA_TOP (IMGWIDTH/2)	/* CSA top outside border  */
+#define CSA_LEFT (IMGWIDTH/4)	/* CSA left outside border  */
+#define CSA_RIGHT (3*IMGWIDTH/4)	/* CSA right outside border  */
 
 /* One example image. In raw/gray format an image is an array of 
  * bytes, one per pixel, with values that represent intensity and range
@@ -107,7 +110,6 @@ int obstCount(uint8_t imageBuf[IMGWIDTH][IMGWIDTH]) {
 		for(i=0; i < IMGWIDTH; i++) {
 			if(imageBuf[j][i] == OBSTACLE_COLOR) {
 				nobs++;
-				break;
 			}			
 		}
 	}
@@ -115,12 +117,24 @@ int obstCount(uint8_t imageBuf[IMGWIDTH][IMGWIDTH]) {
 	return nobs;
 }
 
+/* Function to count detect obstacles in CSA*/
+int csaObjects(uint8_t imageBuf[IMGWIDTH][IMGWIDTH], int16_t *objcts){
+	for(int i=0; i<CSA_TOP; i++){
+		for(int j=CSA_LEFT; j<CSA_RIGHT; j++){
+			if(imageBuf[i][j] == OBSTACLE_COLOR) {
+				*objcts += 1;
+			}
+		}
+	}
+
+	return 0;
+}
 
 /* Main function */
 int main() {
 	int res;
 	
-	int16_t pos;
+	int16_t pos, csa_obj=0;
 	float angle;
 	
 	
@@ -133,5 +147,8 @@ int main() {
 	printf("Detecting number of obstacles ...");
 	res = obstCount(img1);
 	printf("%d obstacles detected\n\r",res);
+
+	res = csaObjects(img1, &csa_obj);
+	printf("%d obsctacles in CSA\n\r", csa_obj);
 	
 }
