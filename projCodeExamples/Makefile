@@ -2,11 +2,14 @@ CC =  gcc # Set the compiler
 L_FLAGS = -lrt -lpthread -lm
 #C_FLAGS = -g
 
-all: img_proc
+all: imageProcAlg cab
 .PHONY: all
 
 # Project compilation
-img_proc: imageProcAlg.c
+cab: cab.c
+	$(CC) $< -o $@ $(C_FLAGS) $(L_FLAGS)
+
+imageProcAlg: imageProcAlg.c
 	$(CC) $< -o $@ $(C_FLAGS) $(L_FLAGS)
 
 	
@@ -15,4 +18,5 @@ img_proc: imageProcAlg.c
 clean:
 	rm -f *.c~ 
 	rm -f *.o
-	rm img_proc
+	rm imageProcAlg
+	rm cab
