@@ -7,7 +7,7 @@
 
 /* Some defines that are usefull to make the SW more readable */
 /* and adaptable */ 
-#define IMGWIDTH 16 /* Square image. Side size, in pixels*/
+#define IMGWIDTH 128 /* Square image. Side size, in pixels*/
 #define BACKGROUND_COLOR 0x00 /* Color of the background */
 #define GUIDELINE_COLOR 0xFF  /* Guideline color */
 #define OBSTACLE_COLOR 0x80 /* Obstacle color */
@@ -52,7 +52,7 @@ uint8_t img1[IMGWIDTH][IMGWIDTH]=
 	};
 
 
-/* Function that detects he position and agle of the guideline */
+/* Function that detects the position and agle of the guideline */
 int guideLineSearch(uint8_t imageBuf[IMGWIDTH][IMGWIDTH], int16_t *pos, float *angle) {
 	int i, gf_pos;
 	float divergence, pos_percent;
@@ -78,7 +78,7 @@ int guideLineSearch(uint8_t imageBuf[IMGWIDTH][IMGWIDTH], int16_t *pos, float *a
 	}
 
 	if(pos_percent == -1 || gf_pos == -1) {
-		printf("Failed to find guideline pos=%d, gf_pos=%d", (int)pos_percent, gf_pos);
+		// printf("Failed to find guideline pos=%d, gf_pos=%d", (int)pos_percent, gf_pos);
 		return -1;
 	}
 
@@ -92,28 +92,26 @@ int guideLineSearch(uint8_t imageBuf[IMGWIDTH][IMGWIDTH], int16_t *pos, float *a
 	return 0;	
 }
 
-/* Function that counts obstacles. 
-   Crude version. Only works if one obstacle per row at max. */
+/* Function that counts obstacles */
 int obstCount(uint8_t imageBuf[IMGWIDTH][IMGWIDTH]) {
-	int i, j, nobs;
+	int i, j, n_obs;
 		
 	/* Inits */
-	nobs=0;
-		
-	/* Search for obstacles. Crude version. Only works if one obstacle per row at max*/
+	n_obs=0;
+
 	for(j=0; j < IMGWIDTH; j++) {
 		for(i=0; i < IMGWIDTH; i++) {
 			if(imageBuf[j][i] == OBSTACLE_COLOR) {
-				nobs++;
+				n_obs++;
 			}			
 		}
 	}
 	
-	return nobs;
+	return n_obs;
 }
 
 /* Function to count detected obstacles in CSA*/
-int csaObjects(uint8_t imageBuf[128][128]){
+int csaObjects(uint8_t imageBuf[IMGWIDTH][IMGWIDTH]){
 	for(int i=0; i<CSA_TOP; i++){
 		for(int j=CSA_LEFT; j<CSA_RIGHT; j++){
 			if(imageBuf[i][j] == OBSTACLE_COLOR) {
@@ -135,9 +133,9 @@ void test(){
 
 	assert(46==pos);
 	assert(static_angle==angle);
-	static_angle++;
+	static_angle = 0.0;
 
-	printf("Passed tests!\n\r");
+	// printf("Passed tests!\n\r");
 }
 
 /* Main function */

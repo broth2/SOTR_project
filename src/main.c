@@ -38,8 +38,13 @@ struct k_thread obstacle_count_data;
 struct k_thread output_update_data;
 struct k_thread location_data;
 
-uint8_t img[128][128];  /* shared memory */
-uint8_t csa_obj=0;  /* object in csa */
+/* shared mem vars: */
+
+uint8_t img[128][128];  /* received img */
+uint8_t csa_obj = 0;    /* object in csa */
+int num_objcts = 0;     /* number of objects in image */
+float curr_angle;       /* angle at which the robot is pointing */
+int16_t curr_pos;       /* current distance from left border in percentage */
 
 /* Create task IDs */
 k_tid_t near_detect_tid;
@@ -49,12 +54,16 @@ k_tid_t location_tid;
 
 /* Semaphores for task synch */
 struct k_sem near_detect_sem;
+struct k_sem obstacle_count_sem;
+struct k_sem output_update_sem;
+struct k_sem location_sem;
 
-/* Thread code prototypes */
-void thread_A_code(void *argA, void *argB, void *argC);
-void thread_B_code(void *argA, void *argB, void *argC);
-void thread_C_code(void *argA, void *argB, void *argC);
-void thread_Reset_code(void *argA, void *argB, void *argC);
+// Thread code prototypes
+
+void near_detect(void *argA, void *argB, void *argC);
+void obstacle_count(void *argA, void *argB, void *argC);
+void output_update(void *argA, void *argB, void *argC);
+void curr_location(void *argA, void *argB, void *argC);
 
 void main(void) {
 
@@ -64,23 +73,26 @@ void main(void) {
     
     /* Create and init semaphores */
     k_sem_init(&near_detect_sem, 0, 1);
+    k_sem_init(&obstacle_count_sem, 0, 1);
+    k_sem_init(&output_update_sem, 0, 1);
+    k_sem_init(&location_sem, 0, 1);
     
     /* Create tasks */
     near_detect_tid = k_thread_create(&near_detect_data, near_detect_stack,
-        K_THREAD_STACK_SIZEOF(near_detect_stack), thread_A_code,
+        K_THREAD_STACK_SIZEOF(near_detect_stack), near_detect,
         NULL, NULL, NULL, NEAR_DETECT_PRIO, 0, K_NO_WAIT);
 
     obstacle_count_tid = k_thread_create(&obstacle_count_data, obstacle_count_stack,
-        K_THREAD_STACK_SIZEOF(obstacle_count_stack), thread_B_code,
+        K_THREAD_STACK_SIZEOF(obstacle_count_stack), obstacle_count,
         NULL, NULL, NULL, OBSTACLE_COUNT_PRIO, 0, K_NO_WAIT); 
         
 
     output_update_tid = k_thread_create(&output_update_data, output_update_stack,
-        K_THREAD_STACK_SIZEOF(output_update_stack), thread_C_code,
+        K_THREAD_STACK_SIZEOF(output_update_stack), output_update,
         NULL, NULL, NULL, OUTPUT_UPDATE_PRIO, 0, K_NO_WAIT); 
 
     location_tid = k_thread_create(&location_data, location_stack,
-        K_THREAD_STACK_SIZEOF(location_stack), thread_Reset_code,
+        K_THREAD_STACK_SIZEOF(location_stack), curr_location,
         NULL, NULL, NULL, LOCATION_PRIO, 0, K_NO_WAIT); 
 
     
@@ -88,50 +100,80 @@ void main(void) {
 
 } 
 
-void thread_A_code(void *argA , void *argB, void *argC){
+/*  Task that detects if obstacles are in the CSA, when new image is 
+    received and updates to shared mem variable csa_obj y/n  */
+void near_detect(void *argA , void *argB, void *argC){
     printk("A) Near Obstacle Detection Thread init\n\r");
 
     while(1){
         k_sem_take(&near_detect_sem, K_FOREVER);
-        printk("thread a instance released at %lld\n\r", k_uptime_get());
+        printk("thread A instance released at %lld\n\r", k_uptime_get());
+
         if (csaObjects(img)){
             csa_obj = 1;
+            // update shared mem through cab
         }
     }
-    // when new image (sporadic)
-    // csaObjects(image)
-    // if found : found=1
+    
+    // high PRIO
 }
 
-void thread_B_code(void *argA , void *argB, void *argC){
-    printk("B) \n\r");
-    // when new image or system state changes
-    //cada vez que uma tarefa termina
+/*  Task that counts the number of objects detected, when new
+    image is received and updated shared mem variable  */
+void obstacle_count(void *argA , void *argB, void *argC){
+    printk("B) Obstacle Count in Image Thread\n\r");
 
-    // apenas imprime as variaveis da memoria partilha
+    while(1){
+        k_sem_take(&obstacle_count_sem, K_FOREVER);
+        printk("thread B instance released at %lld\n\r", k_uptime_get());
+
+        // update shared mem through cab
+        num_objcts = obstCount(img);
+        printk("%d obstacles detected\n\r", num_objcts);
+    }
+
+    // apenas imprime as variaveis da memoria partilhada,
+    // deve correr quando as outras tarefas ja correram todas
+    // lowest PRIO
 }
 
-void thread_C_code(void *argA , void *argB, void *argC){
-    printk("C) \n\r");
-    // when new image or system state changes
-    //cada vez que uma tarefa termina
+/*  Task that prints orientation, number of objects in 
+    the CSA and total objects detected, everytime a new image
+    is received. Gets data from shared mem */
+void output_update(void *argA , void *argB, void *argC){
+    printk("C) Output Update Thread\n\r");
+    char csa_obj_bool;
 
-    // apenas imprime as variaveis da memoria partilha
+    while(1){
+        k_sem_take(&output_update_sem, K_FOREVER);
+        printk("thread C instance released at %lld\n\r", k_uptime_get());
+
+        // get data of shared mem through cab (curr_angle, csa_obj, num_objcts)
+        csa_obj_bool = 'N';
+        if (csa_obj != 0)   csa_obj_bool = 'Y';
+
+        printk("\n\r--------- SYSTEM STATE ---------\n\r");
+        printk("Current Orientation: %f\n\rObsctacles in CSA: %c\n\rTotal Objects Detected: %d\n\r", curr_angle, csa_obj_bool, num_objcts);
+        printk("--------------------------------\n\n\r");
+    }
+
+    // high PRIO
 }
 
-void thread_Reset_code(void *argA , void *argB, void *argC){
-    printk("D) \n\r");
-    // when new image or system state changes
-    //cada vez que uma tarefa termina
+/*  Task that calculates current position and facing angle of the
+    robot, everytime there is a new image and updates shared mem */
+void curr_location(void *argA , void *argB, void *argC){
+    printk("D) Orientation and Position Thread\n\r");
+    
+    while(1){
+        k_sem_take(&location_sem, K_FOREVER);
+        printk("thread D instance released at %lld\n\r", k_uptime_get());
 
-    // apenas imprime as variaveis da memoria partilha
+        // get address of vars from shared mem through cab(&curr_angle, &curr_pos)
+        // this might prove a vulnerability, maybe we should store the values in temp vars(temp_angle/temp_pos) and update shared mem vars' addresses after calculations
+
+        if(guideLineSearch(img, &curr_pos, &curr_angle)) printk("Failed to find guideline...\n\r");
+    }
+
+    // low PRIO
 }
-
-// obs count task: run obs_count, lowest possible priority
-
-// orientantion and position task:
-
-
-//all tasks are sporadic, obs_count task runs only when nothing else needs to be done
-// tasks should run and change variables in shared memory(system state's vars)
-// output update simulates outputting to another module of the system, only prints instead of sharing to movement hardware for example
