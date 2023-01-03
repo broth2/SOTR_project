@@ -93,7 +93,7 @@ int guideLineSearch(uint8_t imageBuf[IMGWIDTH][IMGWIDTH], int16_t *pos, float *a
 }
 
 /* Function that counts obstacles. 
-/* Crude version. Only works if one obstacle per row at max. */
+   Crude version. Only works if one obstacle per row at max. */
 int obstCount(uint8_t imageBuf[IMGWIDTH][IMGWIDTH]) {
 	int i, j, nobs;
 		
@@ -113,7 +113,7 @@ int obstCount(uint8_t imageBuf[IMGWIDTH][IMGWIDTH]) {
 }
 
 /* Function to count detected obstacles in CSA*/
-int csaObjects(uint8_t imageBuf[IMGWIDTH][IMGWIDTH]){
+int csaObjects(uint8_t imageBuf[128][128]){
 	for(int i=0; i<CSA_TOP; i++){
 		for(int j=CSA_LEFT; j<CSA_RIGHT; j++){
 			if(imageBuf[i][j] == OBSTACLE_COLOR) {
@@ -135,15 +135,16 @@ void test(){
 
 	assert(46==pos);
 	assert(static_angle==angle);
+	static_angle++;
 
 	printf("Passed tests!\n\r");
 }
 
 /* Main function */
-int main() {	
+// int main() {	
 	
-	printf("Test for image processing algorithms \n\r");
-	test();
+	// printf("Test for image processing algorithms \n\r");
+	// test();
 	// printf("Detecting position and guideline angle ...\n\r");
 	// res = guideLineSearch(img1, &pos, &angle);
 	// printf("Robot position=%d, guideline angle = %f\n\r",pos,angle);
@@ -155,4 +156,4 @@ int main() {
 	// res = csaObjects(img1, &csa_obj);
 	// printf("%d obsctacles in CSA\n\r", csa_obj);
 	
-}
+// }

@@ -10,7 +10,7 @@
 
 #include <zephyr.h>
 #include <device.h>
-#include "ipa.h"
+#include "imageProcAlg.c"
 
 /* Size of stack area used by each thread */
 #define STACK_SIZE 1024
@@ -38,7 +38,7 @@ struct k_thread obstacle_count_data;
 struct k_thread output_update_data;
 struct k_thread location_data;
 
-uint8_t img[IMGSIDE][IMGSIDE];  /* shared memory */
+uint8_t img[128][128];  /* shared memory */
 uint8_t csa_obj=0;  /* object in csa */
 
 /* Create task IDs */
@@ -54,12 +54,13 @@ struct k_sem near_detect_sem;
 void thread_A_code(void *argA, void *argB, void *argC);
 void thread_B_code(void *argA, void *argB, void *argC);
 void thread_C_code(void *argA, void *argB, void *argC);
+void thread_Reset_code(void *argA, void *argB, void *argC);
 
 void main(void) {
 
     
     /* Welcome message */
-    printf("\n\rinit\n\r");
+    printk("\n\rinit\n\r");
     
     /* Create and init semaphores */
     k_sem_init(&near_detect_sem, 0, 1);
@@ -87,11 +88,11 @@ void main(void) {
 
 } 
 
-void near_detect(void *argA , void *argB, void *argC){
+void thread_A_code(void *argA , void *argB, void *argC){
     printk("A) Near Obstacle Detection Thread init\n\r");
 
     while(1){
-        k_sem_take(near_detect_sem, K_FOREVER);
+        k_sem_take(&near_detect_sem, K_FOREVER);
         printk("thread a instance released at %lld\n\r", k_uptime_get());
         if (csaObjects(img)){
             csa_obj = 1;
@@ -102,7 +103,24 @@ void near_detect(void *argA , void *argB, void *argC){
     // if found : found=1
 }
 
-void output_update(void *argA , void *argB, void *argC){
+void thread_B_code(void *argA , void *argB, void *argC){
+    printk("B) \n\r");
+    // when new image or system state changes
+    //cada vez que uma tarefa termina
+
+    // apenas imprime as variaveis da memoria partilha
+}
+
+void thread_C_code(void *argA , void *argB, void *argC){
+    printk("C) \n\r");
+    // when new image or system state changes
+    //cada vez que uma tarefa termina
+
+    // apenas imprime as variaveis da memoria partilha
+}
+
+void thread_Reset_code(void *argA , void *argB, void *argC){
+    printk("D) \n\r");
     // when new image or system state changes
     //cada vez que uma tarefa termina
 
