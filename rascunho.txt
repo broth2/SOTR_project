@@ -1,15 +1,14 @@
 Collision Sensor Area (CSA), é metade da altura(floor) e metade da largura(center)
 
-Near Object Detection task: deteta objetos na CSA, periodica
+Near Object Detection task: deteta objetos na CSA, esporadica, a cada nova foto ou movimento
 
 Obstacle Counting task: conta os objetos na imagem atual, esporadica, so corre quando ha uma nova imagem ou ate mesmo por um botao
 
-Output Update task: cospe o estado atual do sistema, periodica, talvez é o que diz ao sistema que tem obstaculos em vista
+Output Update task: cospe para o stdout a orientacao, objetos detetados e objetos proximos, esporadica a cada nova foto ou movimento?
 
 Orientation and Position task: le a linha branca no floor e no ceiling, calcula um angulo em rads a partir daí para obter orientacao. Para obter a posicao ve em percentagem onde esta a linha branca no floor, probably periodica,  mas pode ser esporadica, sempre que recebe uma nova foto 
 
 -perguntar se a obstacle counting task é mesmo por botao, 
 -perguntar se a orientation and position task faz sentido ser esporadica
--perguntar se as imagens todas podem ser so arrays bidimensionais
 -como medir o worst case response time
 
