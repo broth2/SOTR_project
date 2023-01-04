@@ -1,9 +1,8 @@
 /*
- * Joao Castanheira, Nuno Fahla, 12/2022
- * Based on teachers examples
- * Zephyr: ?????
+ * Joao Castanheira 97512, Nuno Fahla 97631, 12/2022
+ * Based on code developed through the semester
  * 
- * x tasks are periodc, the other y are activated via a semaphore. Data communicated via sharem memory 
+ * 
  *
  * 
  */
