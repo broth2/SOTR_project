@@ -152,7 +152,7 @@ void near_detect(void *argA , void *argB, void *argC){
     image is received and updated shared mem variable  */
 void obstacle_count(void *argA , void *argB, void *argC){
     printk("B) Obstacle Count in Image Thread\n\r");
-
+    int first = 1;
     k_sem_take(&obstacle_count_sem, K_FOREVER);
     while(1){
         //printk("thread B instance released at %lld\n\r", k_uptime_get());
@@ -166,8 +166,11 @@ void obstacle_count(void *argA , void *argB, void *argC){
         printk("thread b unlock\n");
         printk("%d obstacles detected\n\r", num_objcts);
 
-        k_sem_give(&output_update_sem);
-    }
+        if(first){
+            k_sem_give(&output_update_sem);
+            first = 0;
+        }
+    }   
 
     // apenas imprime as variaveis da memoria partilhada,
     // deve correr quando as outras tarefas ja correram todas
@@ -208,7 +211,7 @@ void output_update(void *argA , void *argB, void *argC){
     robot, everytime there is a new image and updates shared mem */
 void curr_location(void *argA , void *argB, void *argC){
     printk("D) Orientation and Position Thread\n\r");
-    
+    int first = 1;
     k_sem_take(&location_sem, K_FOREVER);
     while(1){
         //printk("thread D instance released at %lld\n\r", k_uptime_get());
@@ -223,7 +226,10 @@ void curr_location(void *argA , void *argB, void *argC){
         printk("thread d unlock\n");
 
 
-        k_sem_give(&output_update_semD);
+        if(first){
+            k_sem_give(&output_update_semD);
+            first = 0;
+        }
     }
 
     // low PRIO
